@@ -1,0 +1,56 @@
+# Несколько примеров SQL-запросв, написанных во время прохождения курса =)
+
+create table applicant as
+SELECT program.program_id, enrollee.enrollee_id, (sum(RESULT))AS itog
+FROM enrollee
+JOIN program_enrollee ON program_enrollee.enrollee_id=enrollee.enrollee_id
+JOIN program ON program_enrollee.program_id=program.program_id
+JOIN program_subject ON program_subject.program_id=program.program_id
+JOIN subject ON subject.subject_id = program_subject.subject_id
+JOIN enrollee_subject ON subject.subject_id = enrollee_subject.subject_id  and enrollee_subject.enrollee_id = enrollee.enrollee_id
+GROUP BY 2, 1
+ORDER BY 1, itog DESC;
+
+delete from applicant 
+using applicant
+join (select program.program_id, enrollee.enrollee_id
+FROM enrollee
+JOIN program_enrollee ON program_enrollee.enrollee_id=enrollee.enrollee_id
+JOIN program ON program_enrollee.program_id=program.program_id
+JOIN program_subject ON program_subject.program_id=program.program_id
+JOIN subject ON subject.subject_id = program_subject.subject_id
+JOIN enrollee_subject ON subject.subject_id = enrollee_subject.subject_id  and enrollee_subject.enrollee_id = enrollee.enrollee_id
+where enrollee_subject.result<program_subject.min_result
+order by 1, 2) as qq using (enrollee_id)
+where qq.program_id=applicant.program_id
+and qq.enrollee_id = applicant.enrollee_id;
+
+UPDATE applicant
+join(
+select enrollee_id, if (sum(bonus) is NULL,0,sum(bonus)) as Бонус
+from enrollee_achievement
+join achievement using(achievement_id)
+right join enrollee using(enrollee_id)
+group by enrollee_id
+order by name_enrollee)as qq on qq.enrollee_id = applicant.enrollee_id
+set itog = itog+Бонус;
+
+select name_program, name_enrollee
+FROM enrollee
+JOIN program_enrollee ON program_enrollee.enrollee_id=enrollee.enrollee_id
+JOIN program ON program_enrollee.program_id=program.program_id
+JOIN program_subject ON program_subject.program_id=program.program_id
+JOIN subject ON subject.subject_id = program_subject.subject_id
+JOIN enrollee_subject ON subject.subject_id = enrollee_subject.subject_id  and enrollee_subject.enrollee_id = enrollee.enrollee_id
+where result<min_result
+order by name_program, name_enrollee;
+
+select name_subject, (concat(left(name_question, 30),'...')) as Вопрос, 
+(count(attempt_id)) as Всего_ответов, ROUND((sum(is_correct)/count(testing_id)*100),2) as Успешность
+from answer
+join testing t using (answer_id)
+join attempt using (attempt_id)
+join subject using(subject_id)
+join question q on q.question_id=t.question_id
+group by 2,1 
+order by 1, Успешность desc, 2;
