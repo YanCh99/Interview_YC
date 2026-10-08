@@ -1,2 +1,2 @@
-
-![image](https://user-images.githubusercontent.com/92800981/193443068-36b0db50-5c14-49aa-93e7-041dac3e72ff.png)
+# stepik_final_aqa_task
+This repository was created to improve my AQA skills and put knowledge into practice.
